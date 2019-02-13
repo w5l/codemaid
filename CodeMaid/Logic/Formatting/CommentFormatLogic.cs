@@ -46,17 +46,17 @@ namespace SteveCadwallader.CodeMaid.Logic.Formatting
         {
             if (!Settings.Default.Formatting_CommentRunDuringCleanup) return;
 
-            FormatComments(textDocument, textDocument.StartPoint.CreateEditPoint(), textDocument.EndPoint.CreateEditPoint());
+            FormatComments(textDocument.StartPoint.CreateEditPoint(), textDocument.EndPoint.CreateEditPoint());
         }
 
         /// <summary>
         /// Reformat all comments between the specified start and end point. Comments that start
-        /// within the range, even if they overlap the end are included.
+        /// within the range, even if they expand beyond the start or end point, are included.
         /// </summary>
-        /// <param name="textDocument">The text document.</param>
-        /// <param name="start">The start point.</param>
-        /// <param name="end">The end point.</param>
-        public bool FormatComments(TextDocument textDocument, EditPoint start, EditPoint end)
+        /// <param name="startPoint">The start point.</param>
+        /// <param name="endPoint">The end point.</param>
+        /// <returns><c>true</c> if comments are found, otherwise <c>false</c>.</returns>
+        public bool FormatComments(EditPoint startPoint, EditPoint endPoint)
         {
             bool foundComments = false;
 
@@ -64,48 +64,50 @@ namespace SteveCadwallader.CodeMaid.Logic.Formatting
                 .FromSettings(Settings.Default)
                 .Set(o =>
                 {
-                    o.TabSize = textDocument.TabSize;
+                    o.TabSize = startPoint.Parent.TabSize;
                     o.IgnoreTokens = CodeCommentHelper
                         .GetTaskListTokens(_package)
                         .Concat(Settings.Default.Formatting_IgnoreLinesStartingWith.Cast<string>())
                         .ToArray();
                 });
 
-            while (start.Line <= end.Line)
+            var searcher = new CommentSearcher();
+            CommentSearcherLocation location;
+            while ((location = searcher.Find(startPoint, endPoint)).Valid)
             {
-                if (CodeCommentHelper.IsCommentLine(start))
+                foundComments = true;
+                var originalText = location.StartPoint.GetText(location.EndPoint);
+
+                var parser = new CodeCommentParser(options, location.CodeLanguage);
+                var comment = parser.Parse(originalText);
+
+                var formatter = new CommentFormatter(comment);
+                var formattedText = formatter.Format(options);
+
+                if (!formattedText.Equals(originalText))
                 {
-                    var comment = new CodeComment(start, options);
+                    var cursor = location.StartPoint.CreateEditPoint();
+                    cursor.Delete(location.EndPoint);
+                    cursor.Insert(formattedText);
 
-                    if (comment.IsValid)
-                    {
-                        comment.Format();
-                        foundComments = true;
-                    }
-
-                    if (comment.EndPoint != null)
-                    {
-                        start = comment.EndPoint.CreateEditPoint();
-                    }
+                    startPoint = cursor.CreateEditPoint();
+                }
+                else
+                {
+                    startPoint = location.EndPoint.CreateEditPoint();
                 }
 
-                if (start.Line == textDocument.EndPoint.Line)
-                {
-                    break;
-                }
-
-                start.LineDown();
-                start.StartOfLine();
+                startPoint.LineDown();
             }
 
             return foundComments;
         }
 
         /// <summary>
-        /// Gets an instance of the <see cref="CommentFormatLogic"/> class.
+        /// Gets an instance of the <see cref="CommentFormatLogic" /> class.
         /// </summary>
         /// <param name="package">The hosting package.</param>
-        /// <returns>An instance of the <see cref="CommentFormatLogic"/> class.</returns>
+        /// <returns>An instance of the <see cref="CommentFormatLogic" /> class.</returns>
         internal static CommentFormatLogic GetInstance(CodeMaidPackage package)
         {
             return _instance ?? (_instance = new CommentFormatLogic(package));

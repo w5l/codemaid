@@ -235,6 +235,9 @@
     <Compile Include="Logic\Reorganizing\GenerateRegionLogic.cs" />
     <Compile Include="Logic\Reorganizing\RegionComparerByName.cs" />
     <Compile Include="Model\CodeItems\IInterfaceItem.cs" />
+    <Compile Include="Model\Comments\CodeCommentParser.cs" />
+    <Compile Include="Model\Comments\CommentMatch.cs" />
+    <Compile Include="Model\Comments\CommentSearcher.cs" />
     <Compile Include="Model\Comments\Options\CommentOptions.cs" />
     <Compile Include="Model\Comments\Options\FormatterOptions.cs" />
     <Compile Include="Model\Comments\CommentLine.cs" />
@@ -336,7 +339,6 @@
     <Compile Include="Model\CodeTree\CodeSortOrder.cs" />
     <Compile Include="CodeMaidPackage.cs" />
     <Compile Include="Model\Comments\CommentFormatter.cs" />
-    <Compile Include="Model\Comments\CommentMatch.cs" />
     <Compile Include="Model\Comments\Options\IXmlTagOptions.cs" />
     <Compile Include="Model\Comments\Options\XmlTagCase.cs" />
     <Compile Include="Model\Comments\Options\XmlTagNewLine.cs" />

@@ -1,4 +1,4 @@
-﻿using System.Text.RegularExpressions;
+﻿using SteveCadwallader.CodeMaid.Helpers;
 
 namespace SteveCadwallader.CodeMaid.Model.Comments.Options
 {
@@ -9,6 +9,6 @@ namespace SteveCadwallader.CodeMaid.Model.Comments.Options
     {
         public string Prefix { get; internal set; }
 
-        public Regex Regex { get; internal set; }
+        public CodeLanguage Language { get; internal set; }
     }
 }

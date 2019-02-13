@@ -1,6 +1,6 @@
 ﻿using EnvDTE;
 using SteveCadwallader.CodeMaid.Model.Comments;
-using SteveCadwallader.CodeMaid.Properties;
+using SteveCadwallader.CodeMaid.Model.Comments.Options;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -18,9 +18,43 @@ namespace SteveCadwallader.CodeMaid.Helpers
         public const char KeepTogetherSpacer = '\a';
         public const char Spacer = ' ';
 
+        /// <summary>
+        /// Gets the list of tokens defined in Tools &gt; Options &gt; Environment &gt; Task List.
+        /// </summary>
+        /// <param name="package"></param>
+        /// <returns></returns>
+        public static IEnumerable<string> GetTaskListTokens(CodeMaidPackage package)
+        {
+            var settings = package.IDE.Properties["Environment", "TaskList"];
+            var tokens = settings.Item("CommentTokens").Value as string[];
+            if (tokens == null || tokens.Length < 1)
+                return Enumerable.Empty<string>();
+
+            // Tokens values are written like "NAME:PRIORITY". We want only the names, and require
+            // that they are followed by a semicolon and a space.
+            return tokens.Select(t => t.Substring(0, t.LastIndexOf(':') + 1) + " ");
+        }
+
         internal static string FakeToSpace(string value)
         {
             return value.Replace(KeepTogetherSpacer, Spacer);
+        }
+
+        /// <summary>
+        /// Helper function to generate the preview in the options menu.
+        /// </summary>
+        internal static string Format(string text, Action<FormatterOptions> options = null)
+        {
+            var formatterOptions = FormatterOptions
+                .FromSettings(Properties.Settings.Default)
+                .Set(o => o.IgnoreTokens = new[] { "TODO: " });
+
+            options?.Invoke(formatterOptions);
+
+            var parser = new CodeCommentParser(formatterOptions, CodeLanguage.CSharp);
+            var comment = parser.Parse(text);
+            var formatter = new CommentFormatter(comment);
+            return formatter.Format(formatterOptions);
         }
 
         /// <summary>
@@ -86,35 +120,6 @@ namespace SteveCadwallader.CodeMaid.Helpers
 
             var pattern = string.Format(@"^{0}(?<indent>[\t ]*)(?<line>(?<listprefix>[-=\*\+]+[ \t]*|\w+[\):][ \t]+|\d+\.[ \t]+)?((?<words>[^\t\r\n ]+)*[\t ]*)*)\r*\n?$", prefix);
             return new Regex(pattern, RegexOptions.ExplicitCapture | RegexOptions.Multiline);
-        }
-
-        /// <summary>
-        /// Gets the list of tokens defined in Tools &gt; Options &gt; Environment &gt; Task List.
-        /// </summary>
-        /// <param name="package"></param>
-        /// <returns></returns>
-        public static IEnumerable<string> GetTaskListTokens(CodeMaidPackage package)
-        {
-            var settings = package.IDE.Properties["Environment", "TaskList"];
-            var tokens = settings.Item("CommentTokens").Value as string[];
-            if (tokens == null || tokens.Length < 1)
-                return Enumerable.Empty<string>();
-
-            // Tokens values are written like "NAME:PRIORITY". We want only the names, and require
-            // that they are followed by a semicolon and a space.
-            return tokens.Select(t => t.Substring(0, t.LastIndexOf(':') + 1) + " ");
-        }
-
-        internal static bool IsCommentLine(EditPoint point)
-        {
-            return LineMatchesRegex(point, GetCommentRegex(point.GetCodeLanguage())).Success;
-        }
-
-        internal static Match LineMatchesRegex(EditPoint point, Regex regex)
-        {
-            var line = point.GetLine();
-            var match = regex.Match(line);
-            return match;
         }
 
         internal static string SpaceToFake(string value)

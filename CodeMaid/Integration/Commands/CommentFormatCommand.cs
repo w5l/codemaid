@@ -88,7 +88,7 @@ namespace SteveCadwallader.CodeMaid.Integration.Commands
                     }
 
                     bool foundComments = false;
-                    _undoTransactionHelper.Run(() => foundComments = _commentFormatLogic.FormatComments(activeTextDocument, start, end));
+                    _undoTransactionHelper.Run(() => foundComments = _commentFormatLogic.FormatComments(start, end));
 
                     if (foundComments)
                     {

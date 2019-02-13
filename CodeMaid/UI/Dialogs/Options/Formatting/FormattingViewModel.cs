@@ -1,4 +1,4 @@
-using SteveCadwallader.CodeMaid.Model.Comments;
+using SteveCadwallader.CodeMaid.Helpers;
 using SteveCadwallader.CodeMaid.Model.Comments.Options;
 using SteveCadwallader.CodeMaid.Properties;
 using System.Windows.Media;
@@ -213,7 +213,7 @@ namespace SteveCadwallader.CodeMaid.UI.Dialogs.Options.Formatting
 
         private void UpdatePreviewText()
         {
-            CommentPreviewText = CodeComment.Format(UnformattedPreviewText, null, o =>
+            CommentPreviewText = CodeCommentHelper.Format(UnformattedPreviewText, o =>
             {
                 o.WrapColumn = CommentWrapColumn;
                 o.SkipWrapOnLastWord = CommentSkipWrapOnLastWord;
