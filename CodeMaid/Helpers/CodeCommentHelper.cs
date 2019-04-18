@@ -3,7 +3,6 @@ using SteveCadwallader.CodeMaid.Model.Comments;
 using SteveCadwallader.CodeMaid.Model.Comments.Options;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Text.RegularExpressions;
 
@@ -93,32 +92,35 @@ namespace SteveCadwallader.CodeMaid.Helpers
 
                 case CodeLanguage.VisualBasic:
                     return "'+";
-
-                default:
-                    return null;
             }
+
+            throw new InvalidOperationException($"No comment prefix defined for '{codeLanguage:g}'.");
+        }
+
+        internal static Regex GetCommentLineRegex(CodeLanguage codeLanguage)
+        {
+            var prefix = GetCommentPrefixForLanguage(codeLanguage);
+
+            // Capture groups:
+            // indent: White space before comment prefix.
+            // prefix: The comment prefix.
+            // initialspacer: Single white space between prefix and comment content.
+            // line: Everything that follows the initial spacer, to to newline.
+            var pattern = $@"^(?<indent>[\t ]*)(?<prefix>{prefix})(?<initialspacer>( |\t|\r|\n))?(?<line>[^\r\n]*)\r*\n?$";
+            return new Regex(pattern, RegexOptions.ExplicitCapture | RegexOptions.Multiline);
         }
 
         /// <summary>
         /// Gets the regex for matching a complete comment line.
         /// </summary>
-        internal static Regex GetCommentRegex(CodeLanguage codeLanguage, bool includePrefix = true)
+        internal static Regex GetCommentWordsRegex()
         {
-            string prefix = null;
-            if (includePrefix)
-            {
-                prefix = GetCommentPrefixForLanguage(codeLanguage);
-                if (prefix == null)
-                {
-                    Debug.Fail("Attempting to create a comment regex for a document that has no comment prefix specified.");
-                }
-
-                // Be aware of the added space to the prefix. When prefix is added, we should take
-                // care not to match code comment lines.
-                prefix = string.Format(@"(?<prefix>[\t ]*{0})(?<initialspacer>( |\t|\r|\n|$))?", prefix);
-            }
-
-            var pattern = string.Format(@"^{0}(?<indent>[\t ]*)(?<line>(?<listprefix>[-=\*\+]+[ \t]*|\w+[\):][ \t]+|\d+\.[ \t]+)?((?<words>[^\t\r\n ]+)*[\t ]*)*)\r*\n?$", prefix);
+            // Capture groups:
+            // indent: All leading whitespace after prefix and initial spacer.
+            // line: All comment following the indent, up to newline.
+            // listprefix: Listprefix, indication of this line being a list.
+            // words: Individual words, broken on whitespace and newline.
+            var pattern = @"^(?<indent>[\t ]*)(?<line>(?<listprefix>[-=\*\+]+[ \t]*|\w+[\):][ \t]+|\d+\.[ \t]+)?((?<words>[^\t\r\n ]+)*[\t ]*)*)\r*\n?$";
             return new Regex(pattern, RegexOptions.ExplicitCapture | RegexOptions.Multiline);
         }
 

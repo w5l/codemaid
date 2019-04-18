@@ -7,8 +7,10 @@ namespace SteveCadwallader.CodeMaid.Model.Comments.Options
     /// </summary>
     internal class CommentOptions
     {
-        public string Prefix { get; internal set; }
+        public string Indent { get; internal set; }
 
         public CodeLanguage Language { get; internal set; }
+
+        public string Prefix { get; internal set; }
     }
 }

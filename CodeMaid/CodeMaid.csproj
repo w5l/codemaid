@@ -237,7 +237,8 @@
     <Compile Include="Model\CodeItems\IInterfaceItem.cs" />
     <Compile Include="Model\Comments\CodeCommentParser.cs" />
     <Compile Include="Model\Comments\CommentMatch.cs" />
-    <Compile Include="Model\Comments\CommentSearcher.cs" />
+    <Compile Include="Model\Comments\CommentReader.cs" />
+    <Compile Include="Model\Comments\CommentReaderLocation.cs" />
     <Compile Include="Model\Comments\Options\CommentOptions.cs" />
     <Compile Include="Model\Comments\Options\FormatterOptions.cs" />
     <Compile Include="Model\Comments\CommentLine.cs" />

@@ -12,18 +12,12 @@ namespace SteveCadwallader.CodeMaid.Logic.Formatting
     /// </summary>
     internal class CommentFormatLogic
     {
-        #region Fields
-
         /// <summary>
         /// The singleton instance of the <see cref="CommentFormatLogic" /> class.
         /// </summary>
         private static CommentFormatLogic _instance;
 
         private readonly CodeMaidPackage _package;
-
-        #endregion Fields
-
-        #region Constructors
 
         /// <summary>
         /// Initializes a new instance of the <see cref="CommentFormatLogic" /> class.
@@ -33,10 +27,6 @@ namespace SteveCadwallader.CodeMaid.Logic.Formatting
         {
             _package = package;
         }
-
-        #endregion Constructors
-
-        #region Methods
 
         /// <summary>
         /// Reformat all comments in the specified document.
@@ -71,9 +61,9 @@ namespace SteveCadwallader.CodeMaid.Logic.Formatting
                         .ToArray();
                 });
 
-            var searcher = new CommentSearcher();
-            CommentSearcherLocation location;
-            while ((location = searcher.Find(startPoint, endPoint)).Valid)
+            var reader = new CommentReader();
+            CommentReaderLocation location;
+            while ((location = reader.Find(startPoint, endPoint)).Valid)
             {
                 foundComments = true;
                 var originalText = location.StartPoint.GetText(location.EndPoint);
@@ -112,7 +102,5 @@ namespace SteveCadwallader.CodeMaid.Logic.Formatting
         {
             return _instance ?? (_instance = new CommentFormatLogic(package));
         }
-
-        #endregion Methods
     }
 }

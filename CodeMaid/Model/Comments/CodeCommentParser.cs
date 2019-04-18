@@ -21,12 +21,23 @@ namespace SteveCadwallader.CodeMaid.Model.Comments
         {
             _codeLanguage = codeLanguage;
             _formatterOptions = formatterOptions;
-            _commentLineRegex = CodeCommentHelper.GetCommentRegex(_codeLanguage);
+            _commentLineRegex = CodeCommentHelper.GetCommentLineRegex(_codeLanguage);
         }
 
         public CodeComment Parse(string text)
         {
             var matches = _commentLineRegex.Matches(text).OfType<Match>().ToArray();
+
+            // TODO: Fail when not able to parse.
+            //if (!matches.All(m => m.Success))
+
+            var commentOptions = new CommentOptions
+            {
+                Indent = matches.FirstOrDefault(m => m.Success).Groups["indent"].Value,
+                Prefix = matches.FirstOrDefault(m => m.Success).Groups["prefix"].Value,
+                Language = _codeLanguage
+            };
+
             IEnumerable<ICommentLine> lines = null;
 
             // Concatenate the comment lines without comment prefixes.
@@ -52,11 +63,7 @@ namespace SteveCadwallader.CodeMaid.Model.Comments
                 lines = new[] { new CommentLine(commentText) };
             }
 
-            return new CodeComment(lines, new CommentOptions
-            {
-                Prefix = matches.FirstOrDefault(m => m.Success).Groups["prefix"].Value,
-                Language = _codeLanguage
-            });
+            return new CodeComment(lines, commentOptions);
         }
     }
 }

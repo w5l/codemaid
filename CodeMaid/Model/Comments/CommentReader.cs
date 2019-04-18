@@ -5,28 +5,7 @@ using System.Text.RegularExpressions;
 
 namespace SteveCadwallader.CodeMaid.Model.Comments
 {
-    internal struct CommentSearcherLocation
-    {
-        public CommentSearcherLocation(EditPoint startPoint, EditPoint endPoint, CodeLanguage codeLanguage)
-        {
-            StartPoint = startPoint;
-            EndPoint = endPoint;
-            CodeLanguage = codeLanguage;
-            Valid = (startPoint != null && endPoint != null);
-        }
-
-        public static CommentSearcherLocation None { get; } = new CommentSearcherLocation(null, null, CodeLanguage.Unknown);
-
-        public EditPoint EndPoint { get; }
-
-        public CodeLanguage CodeLanguage { get; }
-
-        public EditPoint StartPoint { get; }
-
-        public bool Valid { get; }
-    }
-
-    internal class CommentSearcher
+    internal class CommentReader
     {
         private CodeLanguage codeLanguage;
         private Regex commentLineRegex;
@@ -35,7 +14,7 @@ namespace SteveCadwallader.CodeMaid.Model.Comments
         /// Find the first comment between the specified start and end point. Comments that start
         /// within the range, even if they expand beyond the start or end point, are included.
         /// </summary>
-        public CommentSearcherLocation Find(EditPoint startPoint, EditPoint endPoint)
+        public CommentReaderLocation Find(EditPoint startPoint, EditPoint endPoint)
         {
             if (startPoint.Parent != endPoint.Parent)
             {
@@ -45,7 +24,7 @@ namespace SteveCadwallader.CodeMaid.Model.Comments
             if (codeLanguage != startPoint.GetCodeLanguage())
             {
                 codeLanguage = startPoint.GetCodeLanguage();
-                commentLineRegex = CodeCommentHelper.GetCommentRegex(codeLanguage);
+                commentLineRegex = CodeCommentHelper.GetCommentLineRegex(codeLanguage);
             }
 
             while (startPoint.Line <= endPoint.Line)
@@ -63,7 +42,7 @@ namespace SteveCadwallader.CodeMaid.Model.Comments
                 }
             }
 
-            return CommentSearcherLocation.None;
+            return CommentReaderLocation.None;
         }
 
         /// <summary>
@@ -74,7 +53,7 @@ namespace SteveCadwallader.CodeMaid.Model.Comments
         /// The start and endpoint of the full comment block, or <c>null</c> if there is no comment
         /// on the current line.
         /// </returns>
-        private CommentSearcherLocation Expand(EditPoint point)
+        private CommentReaderLocation Expand(EditPoint point)
         {
             // Look up to find the start of the comment.
             EditPoint
@@ -84,7 +63,7 @@ namespace SteveCadwallader.CodeMaid.Model.Comments
             // If no startpoint found, there is no valid (formattable) comment on this line.
             if (startPoint == null)
             {
-                return CommentSearcherLocation.None;
+                return CommentReaderLocation.None;
             }
 
             // TODO: Does this mean we look at the "current line" twice? I think it does. Optimize!
@@ -93,12 +72,12 @@ namespace SteveCadwallader.CodeMaid.Model.Comments
             // If no endpoint is found, there is no valid (formattable) comment on this line.
             if (endPoint == null)
             {
-                return CommentSearcherLocation.None;
+                return CommentReaderLocation.None;
             }
 
             startPoint.StartOfLine();
             endPoint.EndOfLine();
-            return new CommentSearcherLocation(startPoint, endPoint, codeLanguage);
+            return new CommentReaderLocation(startPoint, endPoint, codeLanguage);
         }
 
         /// <summary>

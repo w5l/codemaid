@@ -1,77 +1,67 @@
-﻿using SteveCadwallader.CodeMaid.Helpers;
-using SteveCadwallader.CodeMaid.Model.Comments.Options;
-using System;
+﻿using System;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using SteveCadwallader.CodeMaid.Helpers;
+using SteveCadwallader.CodeMaid.Model.Comments.Options;
 
 namespace SteveCadwallader.CodeMaid.Model.Comments
 {
     /// <summary>
     /// Class to handle the actual wrapping and formatting of a comment.
     /// </summary>
-    internal class CommentFormatter : IEquatable<string>
+    internal class CommentFormatter
     {
-        private readonly StringBuilder _builder;
-        private readonly CommentOptions _commentOptions;
-        private readonly FormatterOptions _formatterOptions;
-        private int _commentPrefixLength;
+        private readonly CodeComment _comment;
+        private readonly string _commentPrefix;
+        private readonly int _commentPrefixLength;
+        private readonly Regex _regex;
+
+        private StringBuilder _builder;
         private int _currentPosition;
+        private FormatterOptions _formatterOptions;
         private int _indentAmount;
         private bool _isFirstWord;
         private bool _isIndented;
         private bool _isPrefixWritten;
 
-        public CommentFormatter(ICommentLine line, FormatterOptions formatterOptions, CommentOptions commentOptions)
+        public CommentFormatter(CodeComment comment)
         {
-            _formatterOptions = formatterOptions;
-            _commentOptions = commentOptions;
+            _comment = comment;
+            _commentPrefix = comment.Options.Prefix ?? string.Empty;
+            _commentPrefixLength = _commentPrefix.Length;
+            _regex = CodeCommentHelper.GetCommentWordsRegex();
+        }
 
+        public string Format(FormatterOptions options)
+        {
             _builder = new StringBuilder();
+            _formatterOptions = options;
+
             _currentPosition = 0;
             _isFirstWord = true;
             _isPrefixWritten = false;
             _isIndented = false;
             _indentAmount = 0;
-            _commentPrefixLength = WordLength(commentOptions.Prefix);
 
-            // Special handling for the root XML line, it should not output it's surrounding xml
-            // tags, only it's child lines.
-            if (line is CommentLineXml xml)
+            // On the content of the root, fix the optional alignment of param tags.
+            if (_formatterOptions.Xml.AlignParamTags)
             {
-                // On the content of the root, fix the optional alignment of param tags.
-                if (_formatterOptions.Xml.AlignParamTags)
-                {
-                    AlignParamTags(xml);
-                }
-
-                // Process all the lines inside the root XML line.
-                foreach (var l in xml.Lines)
-                {
-                    NewLine();
-                    Format(l);
-                }
+                AlignParamTags();
             }
-            else
+
+            // Process all the lines inside the root XML line.
+            foreach (var l in _comment.Lines)
             {
-                // Normal comment line has no child-lines and can be processed normally.
-                Format(line);
+                NewLine();
+                Format(l);
             }
-        }
-
-        public bool Equals(string other)
-        {
-            return string.Equals(ToString(), other);
-        }
-
-        public override string ToString()
-        {
             return _builder.ToString().TrimEnd();
         }
 
-        private static void AlignParamTags(CommentLineXml xml)
+        private void AlignParamTags()
         {
-            var paramPhrases = xml.Lines.OfType<CommentLineXml>().Where(p => string.Equals(p.TagName, "param", StringComparison.OrdinalIgnoreCase));
+            var paramPhrases = _comment.Lines.OfType<CommentLineXml>().Where(p => string.Equals(p.TagName, "param", StringComparison.OrdinalIgnoreCase));
             if (paramPhrases.Count() > 1)
             {
                 // If param tags are broken into seperate lines there is nothing to align.
@@ -105,7 +95,7 @@ namespace SteveCadwallader.CodeMaid.Model.Comments
         {
             if (!_isPrefixWritten)
             {
-                _builder.Append(_commentOptions.Prefix);
+                _builder.Append(_commentPrefix);
                 _currentPosition += _commentPrefixLength;
                 _isPrefixWritten = true;
                 _isIndented = false;
@@ -166,7 +156,7 @@ namespace SteveCadwallader.CodeMaid.Model.Comments
             if (line.Content == null)
                 return true;
 
-            var matches = _commentOptions.Regex.Matches(line.Content).OfType<Match>().Select(x => new CodeCommentMatch(x, _formatterOptions)).ToList();
+            var matches = _regex.Matches(line.Content).OfType<Match>().Select(x => new CodeCommentMatch(x, _formatterOptions)).ToList();
 
             // Remove empty matches from the start and end of the comment.
             CodeCommentMatch m;

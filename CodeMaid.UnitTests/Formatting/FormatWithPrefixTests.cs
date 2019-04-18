@@ -23,7 +23,7 @@ namespace SteveCadwallader.CodeMaid.UnitTests.Formatting
             var expected =
                 "// Lorem ipsum dolor sit amet," + Environment.NewLine +
                 "// consectetur adipiscing elit.";
-            CommentFormatHelper.AssertEqualAfterFormat(input, expected, "//", o => o.WrapColumn = 40);
+            CommentFormatHelper.AssertEqualAfterFormat(input, expected, o => o.WrapColumn = 40);
         }
 
         [TestMethod]
@@ -32,7 +32,7 @@ namespace SteveCadwallader.CodeMaid.UnitTests.Formatting
         {
             var input = "// Trailing space  ";
             var expected = "// Trailing space";
-            CommentFormatHelper.AssertEqualAfterFormat(input, expected, "//");
+            CommentFormatHelper.AssertEqualAfterFormat(input, expected);
         }
 
         [TestMethod]
@@ -45,7 +45,7 @@ namespace SteveCadwallader.CodeMaid.UnitTests.Formatting
                 "//";
             var expected =
                 "// Comment with some trailing lines";
-            CommentFormatHelper.AssertEqualAfterFormat(input, expected, "//");
+            CommentFormatHelper.AssertEqualAfterFormat(input, expected);
         }
 
         [TestMethod]
@@ -59,7 +59,7 @@ namespace SteveCadwallader.CodeMaid.UnitTests.Formatting
             var expected =
                 "// Comment with some leading lines";
 
-            CommentFormatHelper.AssertEqualAfterFormat(input, expected, "//");
+            CommentFormatHelper.AssertEqualAfterFormat(input, expected);
         }
 
         [TestMethod]
@@ -67,7 +67,7 @@ namespace SteveCadwallader.CodeMaid.UnitTests.Formatting
         public void SimpleFormatWithPrefixTests_KeepsLeadingSpace()
         {
             var input = "    // Lorem ipsum.";
-            CommentFormatHelper.AssertEqualAfterFormat(input, input, "    //");
+            CommentFormatHelper.AssertEqualAfterFormat(input, input);
         }
 
         [TestMethod]
@@ -80,7 +80,7 @@ namespace SteveCadwallader.CodeMaid.UnitTests.Formatting
             var expected =
                 "    // Lorem ipsum dolor sit amet," + Environment.NewLine +
                 "    // consectetur adipiscing elit.";
-            CommentFormatHelper.AssertEqualAfterFormat(input, expected, "    //", o => o.WrapColumn = 40);
+            CommentFormatHelper.AssertEqualAfterFormat(input, expected, o => o.WrapColumn = 40);
         }
 
         [TestMethod]
@@ -91,7 +91,7 @@ namespace SteveCadwallader.CodeMaid.UnitTests.Formatting
                 "// Lorem ipsum dolor sit amet." + Environment.NewLine +
                 "//" + Environment.NewLine +
                 "// Consectetur adipiscing elit.";
-            CommentFormatHelper.AssertEqualAfterFormat(input, input, "//", o => o.WrapColumn = 40);
+            CommentFormatHelper.AssertEqualAfterFormat(input, input, o => o.WrapColumn = 40);
         }
     }
 }
